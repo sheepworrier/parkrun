@@ -1,0 +1,99 @@
+---
+title: "Parkrun rivalry"
+output: html_notebook
+params:
+  athlete_one: 25103
+  athlete_two: 733446
+---
+
+```{r setup, include=FALSE}
+source("common-functions.R")
+```
+
+```{r get_data, include=FALSE}
+# Scrape the Parkrun website to get the data for this report
+list_one <- get_all_runs(params$athlete_one)
+list_two <- get_all_runs(params$athlete_two)
+# Create a superset of all parkruns by these athletes
+all_results <- list_one$results %>%
+  full_join(list_two$results, by = c("date", "sameday_rank"),
+            suffix = c("_one", "_two")) %>%
+  select(date, sameday_rank, event_one, event_number_one, position_one,
+         time_one, event_two, event_number_two, position_two, time_two) %>%
+  arrange(date, sameday_rank)
+# Total combined races
+total_combined_races <- nrow(list_one$results) + nrow(list_two$results)
+# Total shared races
+total_shared_races <- all_results %>%
+  filter(event_one == event_two) %>%
+  mutate(one_wins = ifelse(position_one < position_two, 1, 0)) %>%
+  select(date, event_one, position_one, time_one, position_two, time_two,
+         one_wins)
+# Course bests
+course_bests <- list_one$results %>%
+  mutate(time = as.duration(time)) %>%
+  group_by(event) %>%
+  summarise_at(vars(time), list(~min)) %>%
+  mutate(time = seconds_to_period(time)) %>%
+  full_join(list_two$results %>%
+               mutate(time = as.duration(time)) %>%
+               group_by(event) %>%
+               summarise_at(vars(time), list(~min)) %>%
+               mutate(time = seconds_to_period(time)),
+             by = "event", suffix = c("_one", "_two")) %>%
+  mutate(one_wins = ifelse(time_one < time_two, 1, 0)) %>%
+  arrange(event)
+shared_course_bests <- course_bests %>%
+  filter(!is.na(time_one) & !is.na(time_two))
+# Calculate median times
+median_one <- total_shared_races$time_one %>%
+  as.duration() %>%
+  median() %>%
+  round(digits = 0) %>%
+  seconds_to_period()
+median_two <- total_shared_races$time_two %>%
+  as.duration() %>%
+  median() %>%
+  round(digits = 0) %>%
+  seconds_to_period()
+# Create a head to head table
+head_to_head <- data.frame(metric = c("Wins", "Median", "CBs"),
+                           athlete_one = c(sum(total_shared_races$one_wins),
+                                           paste(minute(median_one),
+                                                 str_pad(second(median_one),
+                                                         width = 2, pad = "0"),
+                                                 sep = ":"),
+                                           sum(shared_course_bests$one_wins)),
+                           athlete_two = c(nrow(total_shared_races) - 
+                                             sum(total_shared_races$one_wins),
+                                           paste(minute(median_two),
+                                                 str_pad(second(median_two),
+                                                         width = 2, pad = "0"),
+                                                 sep = ":"),
+                                           nrow(shared_course_bests) -
+                                             sum(shared_course_bests$one_wins)))
+colnames(head_to_head) <- c("Metric", list_one$name, list_two$name)
+```
+
+### Background
+
+Our two athletes, **`r list_one$name`** and **`r list_two$name`**, have run
+**`r total_combined_races`** Parkruns between them covering a total of 
+**`r prettyNum(total_combined_races * 5, big.mark = ",")`**km.  In the
+**`r nrow(total_shared_races)`** races they have completed together, the stats
+are as follows:
+
+```{r head_to_head, echo=FALSE}
+knitr::kable(head_to_head)
+```
+
+### All Course Records
+
+```{r course_bests, echo=FALSE}
+knitr::kable(course_bests[, 1:3],
+             col.names = c("Course", list_one$name, list_two$name))
+```
+
+### Timeline
+
+To be continued...
