@@ -4,6 +4,7 @@ library(httr)
 library(polite)
 library(lubridate)
 library(toOrdinal)
+library(ggplot2)
 get_all_runs <- function(athlete_id) {
   # Construct the URL to get all results for a given athlete ID
   allRunsURL <-
@@ -61,4 +62,12 @@ generate_report_text <- function(template_run, template_no_run, report_date,
     text <- sprintf(template_no_run, name, most_recent_result$event,
                     most_recent_result$date, most_recent_result$time)
   }
+}
+
+generate_boxplot_dataframe <- function(athlete_results) {
+  boxplot_results <- athlete_results$results %>%
+    mutate(name = athlete_results$name,
+           time = as.duration(time) / 60) %>%
+    select(name, time)
+  boxplot_results
 }

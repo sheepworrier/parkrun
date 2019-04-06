@@ -25,3 +25,15 @@ for (ii in seq(length(results))) {
                            current), "\n")
 }
 ```
+
+## Box and whiskers plot for all runs
+
+```{r boxplots, echo = FALSE, warning = FALSE}
+boxplot_df <- map_dfr(results, generate_boxplot_dataframe)
+ggplot(boxplot_df, aes(x = name, y = time, fill = name)) + 
+  geom_boxplot() +
+  # geom_dotplot(binaxis = "y", stackdir = "center", dotsize = 1) +
+  # geom_jitter(shape=16, position = position_jitter(0.2)) +
+  ylab("Parkrun time (minutes)") +
+  xlab("Name")
+```
