@@ -1,0 +1,27 @@
+---
+title: "Parkrun round-up"
+output: html_notebook
+params:
+  athletes: !r c(25103, 733446, 937323)
+  event_date: !r Sys.Date()
+---
+
+```{r setup, include=FALSE}
+source("common-functions.R")
+```
+
+```{r get_data, include=FALSE}
+# Scrape the Parkrun website to get the data for this report
+results <- map(params$athletes, get_all_runs)
+# Generate text to display later
+```
+
+## `r params$event_date`
+
+```{r echo = FALSE, results = "asis"}
+for (ii in seq(length(results))) {
+  current <- results[[ii]]
+  cat(generate_report_text(template_run, template_no_run, params$event_date,
+                           current), "\n")
+}
+```

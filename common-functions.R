@@ -3,6 +3,7 @@ library(rvest)
 library(httr)
 library(polite)
 library(lubridate)
+library(toOrdinal)
 get_all_runs <- function(athlete_id) {
   # Construct the URL to get all results for a given athlete ID
   allRunsURL <-
@@ -34,4 +35,30 @@ get_all_runs <- function(athlete_id) {
                                  1))
   # Return the results to the caller
   list(results = result, name = first_name)
+}
+
+template_run <-
+  paste("%s ran at %s today and finished in %s.  This was their %s Parkrun at",
+        "%s and their %s overall.\n")
+template_no_run <-
+  paste("%s did not run today - their last run was at %s on %s, which they",
+        "completed in %s.\n")
+
+generate_report_text <- function(template_run, template_no_run, report_date,
+                                 athlete_results) {
+  name <- athlete_results$name
+  most_recent_result <- athlete_results$results[1, ]
+  runs_at_latest_event <- athlete_results$results %>%
+    filter(event == most_recent_result$event) %>%
+    nrow()
+  # Pick template based on most recent run date
+  if (most_recent_result$date == report_date) {
+    text <- sprintf(template_run, name, most_recent_result$event,
+                    most_recent_result$time, toOrdinal(runs_at_latest_event),
+                    most_recent_result$event,
+                    toOrdinal(nrow(athlete_results$results)))
+  } else {
+    text <- sprintf(template_no_run, name, most_recent_result$event,
+                    most_recent_result$date, most_recent_result$time)
+  }
 }
