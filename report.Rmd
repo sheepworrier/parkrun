@@ -2,8 +2,10 @@
 title: "Parkrun round-up"
 output: html_notebook
 params:
-  athletes: !r c(25103, 733446, 937323, 25102)
+  athletes: !r c(25103, 733446, 937323, 25102, 519832, 520109)
+  athletes_pronoun: !r c("his", "his", "her", "her", "her", "his")
   junior_athletes: !r c(5066803, 5066873)
+  junior_pronoun: !r c("her", "her")
   event_date: !r Sys.Date()
 ---
 
@@ -17,10 +19,13 @@ source("common-functions.R")
 if ((month(params$event_date) == 12 & day(params$event_date) == 25) |
     (month(params$event_date) == 1 & day(params$event_date) == 1)) {
       athletes <- params$athletes
+      pronouns <- params$athletes_pronoun
 } else if (wday(params$event_date) == 1) {
   athletes <- params$junior_athletes
+  pronouns <- params$junior_pronoun
 } else {
   athletes <- params$athletes
+  pronouns <- params$athletes_pronoun
 }
 # Scrape the Parkrun website to get the data for this report
 results <- map(athletes, get_all_runs)
@@ -33,7 +38,7 @@ results <- map(athletes, get_all_runs)
 for (ii in seq(length(results))) {
   current <- results[[ii]]
   cat(generate_report_text(template_run, template_no_run, params$event_date,
-                           current), "\n")
+                           current, pronouns[ii]), "\n")
 }
 ```
 

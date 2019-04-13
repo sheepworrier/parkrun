@@ -21,6 +21,7 @@ get_all_runs <- function(athlete_id) {
     html_node("h2") %>%
     html_text()
   first_name <- str_extract_all(header, boundary("word"))[[1]][[1]]
+  print(paste("Getting results for", first_name))
   # Reformat the column names to match usual style
   colnames(result) <- c("event", "date", "event_number", "position", "time",
                         "wava_age_grade", "personal_best")
@@ -39,14 +40,14 @@ get_all_runs <- function(athlete_id) {
 }
 
 template_run <-
-  paste("%s ran at %s today and finished in %s.  This was their %s Parkrun at",
-        "%s and their %s overall.\n")
+  paste("%s ran at %s today and finished in %s.  This was %s %s Parkrun at",
+        "%s and %s %s overall.\n")
 template_no_run <-
-  paste("%s did not run today - their last run was at %s on %s, which they",
+  paste("%s did not run today - %s last run was at %s on %s, which %s",
         "completed in %s.\n")
 
 generate_report_text <- function(template_run, template_no_run, report_date,
-                                 athlete_results) {
+                                 athlete_results, pronoun) {
   name <- athlete_results$name
   most_recent_result <- athlete_results$results[1, ]
   runs_at_latest_event <- athlete_results$results %>%
@@ -55,12 +56,14 @@ generate_report_text <- function(template_run, template_no_run, report_date,
   # Pick template based on most recent run date
   if (most_recent_result$date == report_date) {
     text <- sprintf(template_run, name, most_recent_result$event,
-                    most_recent_result$time, toOrdinal(runs_at_latest_event),
-                    most_recent_result$event,
+                    most_recent_result$time, pronoun,
+                    toOrdinal(runs_at_latest_event),
+                    most_recent_result$event, pronoun,
                     toOrdinal(nrow(athlete_results$results)))
   } else {
-    text <- sprintf(template_no_run, name, most_recent_result$event,
-                    most_recent_result$date, most_recent_result$time)
+    he_she <- ifelse(pronoun == "his", "he", "she")
+    text <- sprintf(template_no_run, name, pronoun, most_recent_result$event,
+                    most_recent_result$date, he_she, most_recent_result$time)
   }
 }
 
