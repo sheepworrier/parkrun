@@ -2,7 +2,8 @@
 title: "Parkrun round-up"
 output: html_notebook
 params:
-  athletes: !r c(25103, 733446, 937323)
+  athletes: !r c(25103, 733446, 937323, 25102)
+  junior_athletes: !r c(5066803, 5066873)
   event_date: !r Sys.Date()
 ---
 
@@ -11,8 +12,18 @@ source("common-functions.R")
 ```
 
 ```{r get_data, include=FALSE}
+# Decide which athlete IDs to use depending on day of the week and special days
+# First check if it's New Year's Day or Christmas Day
+if ((month(params$event_date) == 12 & day(params$event_date) == 25) |
+    (month(params$event_date) == 1 & day(params$event_date) == 1)) {
+      athletes <- params$athletes
+} else if (wday(params$event_date) == 1) {
+  athletes <- params$junior_athletes
+} else {
+  athletes <- params$athletes
+}
 # Scrape the Parkrun website to get the data for this report
-results <- map(params$athletes, get_all_runs)
+results <- map(athletes, get_all_runs)
 # Generate text to display later
 ```
 
