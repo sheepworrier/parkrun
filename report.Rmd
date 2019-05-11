@@ -60,16 +60,18 @@ ggplot(boxplot_df, aes(x = name, y = time, fill = name)) +
 last_5_runs <- map_dfr(results, get_last_5_runs)
 last_5_runs$time <- last_5_runs$time / 60
 plot_ly(last_5_runs, x = ~n, y = ~time, group = ~name, color = ~name,
-        type = "scatter", mode = "lines+markers", width = 900,
+        type = "scatter", mode = "lines+markers",
         hoverinfo = "text",
-        hovertext = paste0(last_5_runs$event, "<br>", last_5_runs$date, " ",
-                           floor(last_5_runs$time), "M ",
-                          round((last_5_runs$time -
-                                   floor(last_5_runs$time)) * 60,
-                                digits = 0), "S")) %>%
+        hovertext = paste0(last_5_runs$name, ": ", last_5_runs$event, "<br>",
+                           last_5_runs$date, " ", floor(last_5_runs$time), "M ",
+                           round((last_5_runs$time -
+                                    floor(last_5_runs$time)) * 60,
+                                 digits = 0), "S")) %>%
   layout(hovermode = "compare",
          xaxis = list(title = "",
-                      showticklabels = FALSE),
-         yaxis = list(title = "Time (minutes)"))
+                      showticklabels = FALSE,
+                      fixedrange=TRUE),
+         yaxis = list(title = "Time (minutes)",
+                      fixedrange=TRUE))
 ```
 
