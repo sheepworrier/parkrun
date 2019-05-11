@@ -5,6 +5,7 @@ library(polite)
 library(lubridate)
 library(toOrdinal)
 library(ggplot2)
+library(plotly)
 get_all_runs <- function(athlete_id) {
   # Construct the URL to get all results for a given athlete ID
   allRunsURL <-
@@ -73,4 +74,15 @@ generate_boxplot_dataframe <- function(athlete_results) {
            time = as.duration(time) / 60) %>%
     select(name, time)
   boxplot_results
+}
+
+get_last_5_runs <- function(results_list) {
+  results_df <- results_list[[1]]
+  results_df %>%
+    arrange(desc(date), desc(sameday_rank)) %>%
+    slice(1:5) %>%
+    arrange(date, sameday_rank) %>%
+    mutate(n = row_number(),
+           name = results_list[[2]],
+           time = as.duration(time))
 }
