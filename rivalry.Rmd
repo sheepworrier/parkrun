@@ -8,6 +8,7 @@ params:
 
 ```{r setup, include=FALSE}
 source("common-functions.R")
+options(knitr.kable.NA = '')
 ```
 
 ```{r get_data, include=FALSE}
